@@ -39,7 +39,8 @@ export async function addListing(_prev: ActionState, formData: FormData): Promis
   const features: Record<string, Tri> = {};
   for (const key of NICE_TO_HAVE_KEYS) features[key] = tri(formData, `feature:${key}`) ?? "unsure";
 
-  const supabase = await clientWithSession();
+  const { supabase, error: sessionError } = await clientWithSession();
+  if (!supabase) return { error: sessionError };
 
   let areaId = text(formData, "areaId");
   if (areaId === "__new") {

@@ -1,8 +1,14 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 
-/** Returns a Supabase client with a session, signing in anonymously if needed. */
-export async function clientWithSession() {
+type Client = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Returns a Supabase client with a session, signing in anonymously if needed.
+ * On failure returns an error message for the form instead of throwing, since
+ * production hides thrown messages behind a generic error page.
+ */
+export async function clientWithSession(): Promise<{ supabase: Client; error?: never } | { supabase?: never; error: string }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -10,10 +16,13 @@ export async function clientWithSession() {
   if (!user) {
     const { error } = await supabase.auth.signInAnonymously();
     if (error) {
-      throw new Error(`Couldn't start a session: ${error.message}. Is anonymous sign-in enabled in Supabase?`);
+      console.error("signInAnonymously failed:", error);
+      return {
+        error: `Couldn't start a session (${error.message}). Check that anonymous sign-ins are enabled in Supabase and that the Supabase URL and key on Vercel are correct.`,
+      };
     }
   }
-  return supabase;
+  return { supabase };
 }
 
 /** The RPCs raise messages written for people; pass them through. */

@@ -33,7 +33,8 @@ export async function saveConstraints(_prev: ActionState, formData: FormData): P
     .getAll("niceToHaves")
     .filter((v): v is string => typeof v === "string" && NICE_TO_HAVE_KEYS.includes(v));
 
-  const supabase = await clientWithSession();
+  const { supabase, error: sessionError } = await clientWithSession();
+  if (!supabase) return { error: sessionError };
   const { error } = await supabase.rpc("save_constraints", {
     p_group: groupId,
     p_max_rent_share: maxRent,
@@ -58,7 +59,8 @@ export async function rateNewAreas(_prev: ActionState, formData: FormData): Prom
   const ratings = readRatings(formData);
   if (!Object.keys(ratings).length) return { error: "Mark at least one area" };
 
-  const supabase = await clientWithSession();
+  const { supabase, error: sessionError } = await clientWithSession();
+  if (!supabase) return { error: sessionError };
   const { error } = await supabase.rpc("rate_new_areas", { p_group: groupId, p_ratings: ratings });
   if (error) return { error: friendly(error) };
   revalidatePath(`/g/${code}`, "layout");
@@ -71,7 +73,8 @@ export async function addArea(_prev: ActionState, formData: FormData): Promise<A
   const name = text(formData, "areaName");
   if (!name) return { error: "Enter an area name" };
 
-  const supabase = await clientWithSession();
+  const { supabase, error: sessionError } = await clientWithSession();
+  if (!supabase) return { error: sessionError };
   const { error } = await supabase.rpc("add_area", { p_group: groupId, p_name: name });
   if (error) return { error: friendly(error) };
   revalidatePath(`/g/${code}`, "layout");

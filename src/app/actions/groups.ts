@@ -10,7 +10,8 @@ export async function createGroup(_prev: ActionState, formData: FormData): Promi
   if (!name) return { error: "Give the group a name" };
   if (!displayName) return { error: "Enter your name" };
 
-  const supabase = await clientWithSession();
+  const { supabase, error: sessionError } = await clientWithSession();
+  if (!supabase) return { error: sessionError };
   const { data, error } = await supabase.rpc("create_group", { p_name: name, p_display_name: displayName });
   if (error || !data) return { error: friendly(error, "Couldn't create the group") };
   redirect(`/g/${data}`);
@@ -22,7 +23,8 @@ export async function joinGroup(_prev: ActionState, formData: FormData): Promise
   if (!/^[A-Z0-9]{6}$/.test(code)) return { error: "Codes are 6 letters and numbers" };
   if (!displayName) return { error: "Enter your name" };
 
-  const supabase = await clientWithSession();
+  const { supabase, error: sessionError } = await clientWithSession();
+  if (!supabase) return { error: sessionError };
   const { data, error } = await supabase.rpc("join_group", { p_code: code, p_display_name: displayName });
   if (error || !data) return { error: friendly(error, "Couldn't join the group") };
   redirect(`/g/${data}`);
