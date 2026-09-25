@@ -4,6 +4,7 @@ import { useState } from "react";
 import { saveConstraints } from "@/app/actions/constraints";
 import { NICE_TO_HAVES } from "@/lib/constants";
 import type { Area, AreaRating, MemberConstraints } from "@/lib/types";
+import { AnchorPicker, type Anchor } from "./AnchorPicker";
 import { AreaRatingList, type RatingValue } from "./AreaRatingList";
 import { FormMessage, SubmitButton, useControlledFormAction } from "./FormBits";
 
@@ -32,7 +33,20 @@ export function ConstraintsForm({
     Object.fromEntries(myRatings.map((r) => [r.area_id, r.acceptable ? "yes" : "no"])),
   );
 
+  const [anchor, setAnchor] = useState<Anchor | null>(
+    existing?.anchor_lat != null && existing.anchor_lng != null
+      ? { label: existing.anchor_label ?? "Saved location", lat: existing.anchor_lat, lng: existing.anchor_lng }
+      : null,
+  );
+  const [radius, setRadius] = useState<3 | 5 | null>(
+    existing?.radius_km === 3 || existing?.radius_km === 5 ? existing.radius_km : null,
+  );
+
   const unrated = areas.filter((a) => !ratings[a.id]).length;
+  const missing = [
+    unrated > 0 && `rate all areas (${unrated} left)`,
+    (!anchor || !radius) && "pick your anchor and radius",
+  ].filter(Boolean);
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -57,6 +71,17 @@ export function ConstraintsForm({
           />
           <p className="hint mt-1">Your share only, not the whole flat's rent.</p>
         </div>
+      </section>
+
+      <section className="card space-y-3">
+        <div>
+          <h2 className="font-semibold">Where you need to be close to</h2>
+          <p className="hint">
+            Pick a place you travel to often, like your office or college, and how far from it you're willing to live.
+            Listings outside your radius get flagged. The group sees your anchor after everyone submits.
+          </p>
+        </div>
+        <AnchorPicker anchor={anchor} radius={radius} onAnchor={setAnchor} onRadius={setRadius} />
       </section>
 
       <section className="card space-y-3">
@@ -118,7 +143,7 @@ export function ConstraintsForm({
         <FormMessage state={state} />
         <p className="text-sm text-stone-600">
           Your answers stay private until all 3 of you submit. Once you submit, they're locked.
-          {unrated > 0 && ` Rate all areas to submit (${unrated} left).`}
+          {missing.length > 0 && ` To submit, ${missing.join(" and ")}.`}
         </p>
         <div className="flex flex-wrap gap-2">
           <SubmitButton name="intent" value="draft" variant="secondary" pending={pending}>

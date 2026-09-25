@@ -40,14 +40,21 @@ async function q<T = Record<string, unknown>>(user: string, sql: string, params:
   return as(user, async (tx) => (await tx.query<T>(sql, params)).rows);
 }
 
-async function save(user: string, group: string, maxRent: number, ratings: Record<string, boolean>, submit: boolean) {
-  await q(user, "select save_constraints($1, $2, true, false, 2, false, $3, $4, $5)", [
-    group,
-    maxRent,
-    ["balcony"],
-    JSON.stringify(ratings),
-    submit,
-  ]);
+async function save(
+  user: string,
+  group: string,
+  maxRent: number,
+  ratings: Record<string, boolean>,
+  submit: boolean,
+  anchor: { lat: number; lng: number; radius: number } | null = { lat: 12.9352, lng: 77.6245, radius: 5 },
+) {
+  await q(
+    user,
+    `select save_constraints(p_group => $1, p_max_rent_share => $2, p_needs_lift => true, p_needs_parking => false,
+       p_min_bathrooms => 2, p_needs_pet_friendly => false, p_nice_to_haves => $3, p_ratings => $4, p_submit => $5,
+       p_anchor_label => $6, p_anchor_lat => $7, p_anchor_lng => $8, p_radius_km => $9)`,
+    [group, maxRent, ["balcony"], JSON.stringify(ratings), submit, anchor ? "Test anchor" : null, anchor?.lat ?? null, anchor?.lng ?? null, anchor?.radius ?? null],
+  );
 }
 
 let code: string;
@@ -59,7 +66,9 @@ beforeAll(async () => {
   db = new PGlite();
   await db.exec(SUPABASE_STUB);
   await db.exec(Object.values(users).map((id) => `insert into auth.users values ('${id}');`).join("\n"));
-  await db.exec(readFileSync(join(__dirname, "../migrations/0001_init.sql"), "utf8"));
+  for (const file of ["0001_init.sql", "0002_maps_and_paste.sql"]) {
+    await db.exec(readFileSync(join(__dirname, "../migrations", file), "utf8"));
+  }
 }, 30_000);
 
 describe("groups and membership", () => {
@@ -132,6 +141,13 @@ describe("areas and listings", () => {
 });
 
 describe("private constraints", () => {
+  it("refuses to submit without an anchor and radius", async () => {
+    await expect(save(users.asha, group, 20000, { [area1]: true, [area2]: false }, true, null)).rejects.toThrow(/anchor location/);
+    await expect(
+      save(users.asha, group, 20000, { [area1]: true, [area2]: false }, false, { lat: 12.9, lng: 77.6, radius: 4 }),
+    ).rejects.toThrow(/3 km or 5 km/);
+  });
+
   it("refuses to submit until every area is rated", async () => {
     await expect(save(users.asha, group, 20000, { [area1]: true }, true)).rejects.toThrow(/every area/);
   });
@@ -182,5 +198,61 @@ describe("private constraints", () => {
     );
     expect(rows.find((r) => r.area_id === area3)?.acceptable).toBe(false);
     expect(rows.find((r) => r.area_id === area1)?.acceptable).toBe(true); // unchanged
+  });
+});
+
+describe("0002: maps and pasted listings", () => {
+  it("stores the anchor and radius with the (private) answers", async () => {
+    const rows = await q<{ anchor_label: string; radius_km: number }>(
+      users.chitra,
+      "select anchor_label, radius_km from member_constraints c join members m on m.id = c.member_id where m.user_id = $1",
+      [users.chitra],
+    );
+    expect(rows).toEqual([{ anchor_label: "Test anchor", radius_km: 5 }]);
+  });
+
+  it("add_area stores coordinates, and fills them in for an existing area without any", async () => {
+    const [{ id }] = await q<{ id: string }>(users.asha, "select add_area($1, 'Koramangala', 12.93, 77.62, 'Bengaluru') as id", [group]);
+    expect(id).toBe(area1); // existing area, coords filled in
+    const [row] = await q(users.bea, "select lat, lng, city from areas where id = $1", [area1]);
+    expect(row).toEqual({ lat: 12.93, lng: 77.62, city: "Bengaluru" });
+    // a second call does not overwrite
+    await q(users.asha, "select add_area($1, 'Koramangala', 1, 1, 'Elsewhere')", [group]);
+    const [again] = await q(users.bea, "select lat from areas where id = $1", [area1]);
+    expect(again).toEqual({ lat: 12.93 });
+  });
+
+  it("pasted listings keep unconfirmed facts until a member confirms them", async () => {
+    const [{ id: me }] = await q<{ id: string }>(users.asha, "select my_member_id($1) as id", [group]);
+    const [{ id: listing }] = await q<{ id: string }>(
+      users.asha,
+      `insert into listings (group_id, area_id, total_rent, floor, lift, parking, bathrooms, pet_friendly, added_by, source, unconfirmed)
+       values ($1, $2, 40000, 2, 'yes', 'unsure', 2, 'no', $3, 'pasted', '{lift,parking,bathrooms,pet_friendly}') returning id`,
+      [group, area1, me],
+    );
+    await q(users.chitra, "select set_listing_fact($1, 'lift', 'yes')", [listing]);
+    await q(users.bea, "select set_listing_fact($1, 'bathrooms', '3')", [listing]);
+    const [row] = await q(users.asha, "select lift, bathrooms, unconfirmed from listings where id = $1", [listing]);
+    expect(row).toEqual({ lift: "yes", bathrooms: 3, unconfirmed: ["parking", "pet_friendly"] });
+
+    await expect(q(users.bea, "select set_listing_fact($1, 'lift', 'maybe')", [listing])).rejects.toThrow(/Yes, No or Not sure/);
+    await expect(q(users.dev, "select set_listing_fact($1, 'lift', 'no')", [listing])).rejects.toThrow(/not found/);
+    await expect(
+      q(users.asha, `insert into listings (group_id, area_id, total_rent, floor, lift, parking, pet_friendly, added_by, unconfirmed)
+                     values ($1, $2, 1, 1, 'yes', 'yes', 'yes', $3, '{rent}')`, [group, area1, me]),
+    ).rejects.toThrow(/check constraint/);
+  });
+
+  it("only saves overlap localities after the reveal, and only for members", async () => {
+    const data = JSON.stringify([{ name: "Koramangala", city: "Bengaluru", lat: 12.93, lng: 77.62 }]);
+    await q(users.asha, "select set_overlap_localities($1, $2)", [group, data]);
+    const [row] = await q<{ overlap_localities: unknown[] }>(users.bea, "select overlap_localities from groups where id = $1", [group]);
+    expect(row.overlap_localities).toHaveLength(1);
+    await expect(q(users.dev, "select set_overlap_localities($1, $2)", [group, data])).rejects.toThrow(/not a member/);
+
+    // a fresh, unrevealed group refuses
+    const [{ code: code2 }] = await q<{ code: string }>(users.dev, "select create_group('Other', 'Dev') as code");
+    const [{ id: group2 }] = await q<{ id: string }>(users.dev, "select id from groups where code = $1", [code2]);
+    await expect(q(users.dev, "select set_overlap_localities($1, $2)", [group2, data])).rejects.toThrow(/once everyone has submitted/);
   });
 });

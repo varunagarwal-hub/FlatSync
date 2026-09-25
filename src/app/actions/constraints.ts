@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { NICE_TO_HAVE_KEYS } from "@/lib/constants";
 import type { ActionState } from "@/lib/types";
+import { addAreaWithLocation } from "./areas";
 import { clientWithSession, friendly, text, wholeNumber } from "./session";
 
 /** Reads `area:<id>` = "yes" | "no" fields into { id: boolean }. */
@@ -29,6 +30,12 @@ export async function saveConstraints(_prev: ActionState, formData: FormData): P
     return { error: "Minimum bathrooms must be between 0 and 10" };
   }
 
+  const anchorLat = Number(text(formData, "anchorLat"));
+  const anchorLng = Number(text(formData, "anchorLng"));
+  const hasAnchor = text(formData, "anchorLat") !== "" && Number.isFinite(anchorLat) && Number.isFinite(anchorLng);
+  const radius = wholeNumber(formData, "radiusKm");
+  if (radius !== null && radius !== 3 && radius !== 5) return { error: "Pick a 3 km or 5 km radius" };
+
   const niceToHaves = formData
     .getAll("niceToHaves")
     .filter((v): v is string => typeof v === "string" && NICE_TO_HAVE_KEYS.includes(v));
@@ -45,6 +52,10 @@ export async function saveConstraints(_prev: ActionState, formData: FormData): P
     p_nice_to_haves: niceToHaves,
     p_ratings: readRatings(formData),
     p_submit: submit,
+    p_anchor_label: hasAnchor ? text(formData, "anchorLabel").slice(0, 300) : null,
+    p_anchor_lat: hasAnchor ? anchorLat : null,
+    p_anchor_lng: hasAnchor ? anchorLng : null,
+    p_radius_km: radius,
   });
   if (error) return { error: friendly(error) };
 
@@ -75,7 +86,7 @@ export async function addArea(_prev: ActionState, formData: FormData): Promise<A
 
   const { supabase, error: sessionError } = await clientWithSession();
   if (!supabase) return { error: sessionError };
-  const { error } = await supabase.rpc("add_area", { p_group: groupId, p_name: name });
+  const { error } = await addAreaWithLocation(supabase, groupId, name);
   if (error) return { error: friendly(error) };
   revalidatePath(`/g/${code}`, "layout");
   return { message: `Added ${name}` };

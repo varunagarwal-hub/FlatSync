@@ -4,6 +4,7 @@ import { ConstraintsSummary } from "@/components/ConstraintsSummary";
 import { Counter } from "@/components/Counter";
 import { ShortlistCard } from "@/components/ShortlistCard";
 import { SubmissionStatus } from "@/components/SubmissionStatus";
+import { WhereToLook } from "@/components/WhereToLook";
 import { GROUP_SIZE } from "@/lib/constants";
 import { loadGroup, type MemberGroupData } from "@/lib/data";
 import { formatINR, joinNames } from "@/lib/format";
@@ -66,6 +67,8 @@ export default async function GroupOverview({ params }: { params: Promise<{ code
       ) : (
         <Waiting data={data} />
       )}
+
+      <WhereToLook data={data} />
 
       <div className="grid gap-6 sm:grid-cols-2">
         <SubmissionStatus members={members} />

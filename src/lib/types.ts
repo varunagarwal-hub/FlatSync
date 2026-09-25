@@ -1,10 +1,19 @@
 export type Tri = "yes" | "no" | "unsure";
 
+export interface Locality {
+  name: string;
+  city: string | null;
+  lat: number;
+  lng: number;
+}
+
 export interface Group {
   id: string;
   code: string;
   name: string;
   created_at: string;
+  /** null until computed (after the reveal) */
+  overlap_localities: Locality[] | null;
 }
 
 /** Row from the member_statuses() RPC: never includes anyone's answers. */
@@ -18,6 +27,9 @@ export interface MemberStatus {
 export interface Area {
   id: string;
   name: string;
+  lat: number | null;
+  lng: number | null;
+  city: string | null;
 }
 
 export interface MemberConstraints {
@@ -29,6 +41,10 @@ export interface MemberConstraints {
   needs_pet_friendly: boolean;
   nice_to_haves: string[];
   submitted_at: string | null;
+  anchor_label: string | null;
+  anchor_lat: number | null;
+  anchor_lng: number | null;
+  radius_km: number | null;
 }
 
 export interface AreaRating {
@@ -52,6 +68,11 @@ export interface Listing {
   notes: string | null;
   added_by: string;
   created_at: string;
+  source: "manual" | "pasted";
+  /** Must-have fields taken from a pasted listing that no member has confirmed yet. */
+  unconfirmed: FactField[];
 }
+
+export type FactField = "lift" | "parking" | "bathrooms" | "pet_friendly";
 
 export type ActionState = { error?: string; message?: string } | undefined;

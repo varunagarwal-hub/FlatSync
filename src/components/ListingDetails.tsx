@@ -1,7 +1,7 @@
 import { NICE_TO_HAVES } from "@/lib/constants";
 import { formatFloor, formatINR } from "@/lib/format";
 import type { ListingStatus } from "@/lib/matching";
-import type { Listing, Tri } from "@/lib/types";
+import type { FactField, Listing, Tri } from "@/lib/types";
 
 const TRI_TEXT: Record<Tri, string> = { yes: "Yes", no: "No", unsure: "Not sure" };
 const TRI_TONE: Record<Tri, string> = {
@@ -28,12 +28,13 @@ export function ListingStatusBadge({ status }: { status: ListingStatus | "pendin
 
 /** Area, rent, floor, link and the Yes/No/Not sure facts about a listing. */
 export function ListingDetails({ listing, areaName }: { listing: Listing; areaName: string }) {
-  const facts: { label: string; value: Tri | string }[] = [
-    { label: "Lift", value: listing.lift },
-    { label: "Parking", value: listing.parking },
-    { label: "Pets", value: listing.pet_friendly },
-    { label: "Bathrooms", value: listing.bathrooms === null ? "unsure" : String(listing.bathrooms) },
+  const facts: { label: string; value: Tri | string; field: FactField }[] = [
+    { label: "Lift", value: listing.lift, field: "lift" },
+    { label: "Parking", value: listing.parking, field: "parking" },
+    { label: "Pets", value: listing.pet_friendly, field: "pet_friendly" },
+    { label: "Bathrooms", value: listing.bathrooms === null ? "unsure" : String(listing.bathrooms), field: "bathrooms" },
   ];
+  const unconfirmed = listing.unconfirmed ?? [];
   const features = NICE_TO_HAVES.filter((n) => listing.features[n.key] === "yes");
 
   return (
@@ -59,7 +60,14 @@ export function ListingDetails({ listing, areaName }: { listing: Listing; areaNa
           return (
             <div key={f.label} className="flex gap-1">
               <dt className="text-stone-500">{f.label}:</dt>
-              <dd className={isTri ? TRI_TONE[f.value as Tri] : ""}>{isTri ? TRI_TEXT[f.value as Tri] : f.value}</dd>
+              <dd className={isTri ? TRI_TONE[f.value as Tri] : ""}>
+                {isTri ? TRI_TEXT[f.value as Tri] : f.value}
+                {unconfirmed.includes(f.field) && f.value !== "unsure" && (
+                  <span className="text-amber-700" title="From the pasted listing. Counts as Not sure until confirmed.">
+                    {" "}(from listing, unconfirmed)
+                  </span>
+                )}
+              </dd>
             </div>
           );
         })}

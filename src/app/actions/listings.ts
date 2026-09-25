@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { NICE_TO_HAVE_KEYS } from "@/lib/constants";
-import type { ActionState, Tri } from "@/lib/types";
+import type { ActionState, FactField, Tri } from "@/lib/types";
+import { addAreaWithLocation } from "./areas";
 import { clientWithSession, friendly, text, wholeNumber } from "./session";
+
+const FACT_FIELDS: FactField[] = ["lift", "parking", "bathrooms", "pet_friendly"];
 
 function tri(formData: FormData, key: string): Tri | null {
   const v = text(formData, key);
@@ -46,11 +49,20 @@ export async function addListing(_prev: ActionState, formData: FormData): Promis
   if (areaId === "__new") {
     const newArea = text(formData, "newArea");
     if (!newArea) return { error: "Enter the new area's name" };
-    const { data, error } = await supabase.rpc("add_area", { p_group: groupId, p_name: newArea });
+    const { data, error } = await addAreaWithLocation(supabase, groupId, newArea);
     if (error || !data) return { error: friendly(error, "Couldn't add the area") };
     areaId = data as string;
+  } else if (areaId) {
+    // Older areas may predate map locations; fill one in now if missing.
+    const { data: area } = await supabase.from("areas").select("name, lat").eq("id", areaId).maybeSingle();
+    if (area && area.lat === null) await addAreaWithLocation(supabase, groupId, area.name);
   }
   if (!areaId) return { error: "Pick an area" };
+
+  const source = text(formData, "source") === "pasted" ? "pasted" : "manual";
+  const unconfirmed = formData
+    .getAll("unconfirmed")
+    .filter((v): v is FactField => typeof v === "string" && (FACT_FIELDS as string[]).includes(v));
 
   const { data: me, error: meError } = await supabase.rpc("my_member_id", { p_group: groupId });
   if (meError || !me) return { error: friendly(meError, "You're not in this group") };
@@ -68,9 +80,28 @@ export async function addListing(_prev: ActionState, formData: FormData): Promis
     features,
     notes: text(formData, "notes") || null,
     added_by: me,
+    source,
+    unconfirmed: source === "pasted" ? unconfirmed : [],
   });
   if (error) return { error: friendly(error) };
 
   revalidatePath(`/g/${code}`, "layout");
   redirect(`/g/${code}/listings`);
+}
+
+/** Confirm or correct one must-have fact on a listing (clears "from listing - not confirmed"). */
+export async function setListingFact(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const listingId = text(formData, "listingId");
+  const code = text(formData, "code");
+  const field = text(formData, "field");
+  const value = text(formData, "value");
+  if (!(FACT_FIELDS as string[]).includes(field)) return { error: "Unknown field" };
+
+  const { supabase, error: sessionError } = await clientWithSession();
+  if (!supabase) return { error: sessionError };
+  const { error } = await supabase.rpc("set_listing_fact", { p_listing: listingId, p_field: field, p_value: value });
+  if (error) return { error: friendly(error) };
+
+  revalidatePath(`/g/${code}`, "layout");
+  return { message: "Saved" };
 }

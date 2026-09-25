@@ -7,6 +7,14 @@ Helps three friends shortlist one shared flat. The app never searches for or scr
 3. Anyone adds listings (area, total rent, floor, link) with each must-have marked Yes / No / Not sure.
 4. Once everyone has submitted, the app rules out listings that break a must-have, sit in a rejected area, or exceed the combined budget. "Not sure" on a needed must-have gets flagged **confirm before visiting** instead of passing. What's left is ranked by nice-to-haves met, and the top 3 are shown with a per-person breakdown of what each person gets and compromises on.
 
+### Maps, localities and pasted listings
+
+- **Anchor + radius.** In the constraints form, each member searches for an anchor location (OpenStreetMap Nominatim) and picks a 3 km or 5 km radius. Like every other answer, it stays private until all 3 submit.
+- **Map.** The overview page shows a Leaflet map with each member's circle and the zone inside all of them. Before the reveal you only see your own circle.
+- **Localities to search.** For localities inside the overlap zone, buttons open NoBroker and 99acres search pages in a new tab. The app builds the links but never fetches or scrapes those sites.
+- **Paste listing.** When adding a listing, paste its text or upload a screenshot. A server-side route sends only that text or image to Google Gemini, which returns the area, rent, floor, lift, parking, bathrooms and pets. The form is filled in for you to check. Every extracted must-have is marked "From listing – not confirmed" and counts as Not sure in matching until a member confirms it on the listings page. If Gemini fails or is rate-limited, you get a friendly message and fill the form in by hand. Manual entry works as before.
+- **Radius flags.** A listing outside someone's radius is flagged (not ruled out), naming whose radius and how far away it is. A listing's location is its area's location, geocoded when the area is added.
+
 ## Stack
 
 Next.js 16 (App Router, server actions) · Supabase (Postgres, RLS, anonymous auth) · Tailwind 4 · Vitest.
@@ -15,7 +23,7 @@ Next.js 16 (App Router, server actions) · Supabase (Postgres, RLS, anonymous au
 
 1. **Create a Supabase project.**
 2. **Enable anonymous sign-ins:** Authentication → Sign In / Providers → *Allow anonymous sign-ins*. Members don't create accounts. Each browser gets an anonymous session, which is how the app knows who is who.
-3. **Run the migration:** paste `supabase/migrations/0001_init.sql` into the SQL editor and run it, or use `supabase db push` with the Supabase CLI.
+3. **Run the migrations, in order:** paste `supabase/migrations/0001_init.sql` into the SQL editor and run it, then do the same with `0002_maps_and_paste.sql`. Or use `supabase db push` with the Supabase CLI.
 4. **Configure env:** copy `.env.example` to `.env.local` and fill in the project URL and anon (or publishable) key from Project Settings → API.
 5. Run it:
 
@@ -27,7 +35,7 @@ Next.js 16 (App Router, server actions) · Supabase (Postgres, RLS, anonymous au
 ## Deploy on Vercel
 
 1. Push the repo to GitHub and import it in Vercel. The framework is auto-detected.
-2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` under Project → Settings → Environment Variables.
+2. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `GEMINI_API_KEY` under Project → Settings → Environment Variables. `GEMINI_API_KEY` must not start with `NEXT_PUBLIC_`, so it stays on the server. Without it, "Paste listing" shows a message and manual entry still works.
 3. Deploy.
 
 Optional: in Supabase, turn on CAPTCHA for anonymous sign-ins (Authentication → Attack Protection) to limit abuse.

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Counter } from "@/components/Counter";
 import { ListingDetails, ListingStatusBadge } from "@/components/ListingDetails";
+import { ListingFacts } from "@/components/ListingFacts";
 import { loadGroup } from "@/lib/data";
 
 export default async function ListingsPage({ params }: { params: Promise<{ code: string }> }) {
@@ -58,7 +59,11 @@ export default async function ListingsPage({ params }: { params: Promise<{ code:
                   ))}
                 </ul>
               )}
-              <p className="hint">Added by {memberName(listing.added_by)}</p>
+              <ListingFacts listing={listing} code={group.code} />
+              <p className="hint">
+                Added by {memberName(listing.added_by)}
+                {listing.source === "pasted" && " · filled in from a pasted listing"}
+              </p>
             </li>
           );
         })}

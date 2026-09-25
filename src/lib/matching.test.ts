@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { matchListings, type MatchInput } from "./matching";
-import type { Listing, MemberConstraints } from "./types";
+import type { Area, Listing, MemberConstraints } from "./types";
 
 const members = [
   { id: "a", name: "Asha" },
   { id: "b", name: "Bea" },
   { id: "c", name: "Chitra" },
 ];
-const areas = [
-  { id: "koramangala", name: "Koramangala" },
-  { id: "hsr", name: "HSR Layout" },
-  { id: "whitefield", name: "Whitefield" },
+const areas: Area[] = [
+  { id: "koramangala", name: "Koramangala", lat: 12.9352, lng: 77.6245, city: "Bengaluru" },
+  { id: "hsr", name: "HSR Layout", lat: 12.9116, lng: 77.6389, city: "Bengaluru" },
+  { id: "whitefield", name: "Whitefield", lat: 12.9698, lng: 77.75, city: "Bengaluru" },
 ];
 
 function constraints(member_id: string, over: Partial<MemberConstraints> = {}): MemberConstraints {
@@ -23,6 +23,10 @@ function constraints(member_id: string, over: Partial<MemberConstraints> = {}): 
     needs_pet_friendly: false,
     nice_to_haves: [],
     submitted_at: "2026-09-01T00:00:00Z",
+    anchor_label: null,
+    anchor_lat: null,
+    anchor_lng: null,
+    radius_km: null,
     ...over,
   };
 }
@@ -44,6 +48,8 @@ function listing(over: Partial<Listing> = {}): Listing {
     notes: null,
     added_by: "a",
     created_at: `2026-09-0${Math.min(seq, 9)}T00:00:00Z`,
+    source: "manual",
+    unconfirmed: [],
     ...over,
   };
 }
@@ -134,7 +140,7 @@ describe("not sure = confirm before visiting", () => {
     const cs = members.map((m) => constraints(m.id, { min_bathrooms: 2 }));
     const r = run([listing({ bathrooms: null })], cs).results[0];
     expect(r.status).toBe("flagged");
-    expect(r.confirmReasons[0]).toMatch(/bathrooms not confirmed \(need at least 2\)/);
+    expect(r.confirmReasons[0]).toBe("Bathrooms: not confirmed (need at least 2)");
   });
 
   it("does not flag Not sure on a must-have nobody needs", () => {
@@ -144,7 +150,7 @@ describe("not sure = confirm before visiting", () => {
 
   it("flags an area someone hasn't rated", () => {
     const r = run([listing({ area_id: "new-area" })], undefined, {
-      areas: [...areas, { id: "new-area", name: "Indiranagar" }],
+      areas: [...areas, { id: "new-area", name: "Indiranagar", lat: null, lng: null, city: null }],
     }).results[0];
     expect(r.status).toBe("flagged");
     expect(r.confirmReasons[0]).toMatch(/Asha, Bea and Chitra haven't rated Indiranagar/);
@@ -226,5 +232,85 @@ describe("per-person breakdown", () => {
 
     expect(chitra.compromises).toEqual([]);
     expect(chitra.gets[0]).toMatch(/Koramangala/);
+  });
+});
+
+describe("facts from a pasted listing", () => {
+  const needAll = members.map((m) =>
+    constraints(m.id, { needs_lift: true, needs_parking: true, needs_pet_friendly: true, min_bathrooms: 2 }),
+  );
+
+  it("counts unconfirmed facts as Not sure, even when the listing says Yes", () => {
+    const r = run([listing({ source: "pasted", unconfirmed: ["lift", "bathrooms"] })], needAll).results[0];
+    expect(r.status).toBe("flagged");
+    expect(r.confirmReasons).toEqual([
+      "Lift: listing says Yes, not confirmed (Asha, Bea and Chitra need it)",
+      "Bathrooms: listing says 3, not confirmed (need at least 2)",
+    ]);
+  });
+
+  it("an unconfirmed No flags instead of ruling out", () => {
+    const r = run([listing({ parking: "no", unconfirmed: ["parking"] })], needAll).results[0];
+    expect(r.status).toBe("flagged");
+    expect(r.confirmReasons[0]).toMatch(/Parking: listing says No, not confirmed/);
+  });
+
+  it("says when the listing didn't state a fact", () => {
+    const r = run([listing({ pet_friendly: "unsure", unconfirmed: ["pet_friendly"] })], needAll).results[0];
+    expect(r.confirmReasons[0]).toMatch(/Pet-friendly: not stated in the listing/);
+  });
+
+  it("once confirmed, facts count normally again", () => {
+    const r = run([listing({ parking: "no", unconfirmed: [] })], needAll).results[0];
+    expect(r.status).toBe("ruled_out");
+  });
+});
+
+describe("anchor radius", () => {
+  // Asha: 3 km around Koramangala. Bea: 5 km around HSR. Chitra: no anchor.
+  const withAnchors = [
+    constraints("a", { anchor_lat: 12.9352, anchor_lng: 77.6245, radius_km: 3 }),
+    constraints("b", { anchor_lat: 12.9116, anchor_lng: 77.6389, radius_km: 5 }),
+    constraints("c"),
+  ];
+
+  it("passes a listing inside everyone's radius and reports distances", () => {
+    const r = run([listing({ area_id: "koramangala" })], withAnchors).results[0];
+    expect(r.status).toBe("clear");
+    expect(r.breakdown[0].gets).toContain("0.0 km from their anchor (within 3 km)");
+    expect(r.breakdown[1].distanceKm).toBeGreaterThan(2);
+    expect(r.breakdown[2].distanceKm).toBeNull();
+  });
+
+  it("flags (not rules out) a listing outside someone's radius, naming who", () => {
+    // HSR is ~3.1 km from Koramangala: outside Asha's 3 km, inside Bea's 5 km
+    const r = run([listing({ area_id: "hsr" })], withAnchors).results[0];
+    expect(r.status).toBe("flagged");
+    expect(r.confirmReasons).toEqual([expect.stringMatching(/^Outside Asha's 3 km \(3\.\d km away\) radius$/)]);
+    expect(r.breakdown[0].compromises[0]).toMatch(/outside their 3 km radius/);
+  });
+
+  it("names everyone whose radius a listing falls outside", () => {
+    const r = run([listing({ area_id: "whitefield" })], withAnchors.map((c) => ({ ...c })), {
+      ratings: ratings.filter((x) => !(x.member_id === "c" && x.area_id === "whitefield")).concat({
+        member_id: "c",
+        area_id: "whitefield",
+        acceptable: true,
+      }),
+    }).results[0];
+    expect(r.confirmReasons.find((x) => x.startsWith("Outside"))).toMatch(/Asha's 3 km .* and Bea's 5 km .* radius/);
+  });
+
+  it("flags a listing whose area isn't on the map when anyone has an anchor", () => {
+    const r = run([listing({ area_id: "nowhere" })], withAnchors, {
+      areas: [...areas, { id: "nowhere", name: "Mystery Nagar", lat: null, lng: null, city: null }],
+      ratings: [...ratings, ...members.map((m) => ({ member_id: m.id, area_id: "nowhere", acceptable: true }))],
+    }).results[0];
+    expect(r.confirmReasons).toContain("Distance not checked: Mystery Nagar isn't on the map yet");
+  });
+
+  it("skips distance checks entirely when nobody has an anchor", () => {
+    const r = run([listing({ area_id: "hsr" })]).results[0];
+    expect(r.status).toBe("clear");
   });
 });

@@ -30,6 +30,10 @@ export function ConstraintsSummary({
       <h3 className="mb-2 font-semibold">{name}</h3>
       <dl className="space-y-1">
         <Row label="Max share" value={formatINR(c.max_rent_share)} />
+        <Row
+          label="Anchor"
+          value={c.anchor_lat !== null && c.radius_km ? `${c.anchor_label ?? "Pinned location"} (${c.radius_km} km)` : "Not set"}
+        />
         <Row label="OK areas" value={ok.join(", ") || "—"} />
         <Row label="Not OK" value={no.join(", ") || "—"} />
         <Row label="Must-haves" value={musts.join(", ") || "None"} />

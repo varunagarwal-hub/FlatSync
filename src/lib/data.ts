@@ -36,14 +36,14 @@ export const loadGroup = cache(async (rawCode: string): Promise<GroupData> => {
   // RLS only returns the group if the caller is a member.
   const { data: group } = await supabase
     .from("groups")
-    .select("id, code, name, created_at")
+    .select("id, code, name, created_at, overlap_localities")
     .eq("code", code)
     .maybeSingle<Group>();
   if (!group) return { kind: "not-member" };
 
   const [membersRes, areasRes, listingsRes] = await Promise.all([
     supabase.rpc("member_statuses", { p_group: group.id }),
-    supabase.from("areas").select("id, name").eq("group_id", group.id).order("name").returns<Area[]>(),
+    supabase.from("areas").select("id, name, lat, lng, city").eq("group_id", group.id).order("name").returns<Area[]>(),
     supabase
       .from("listings")
       .select("*")
