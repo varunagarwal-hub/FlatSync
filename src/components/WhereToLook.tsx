@@ -2,12 +2,12 @@ import Link from "next/link";
 import type { MemberGroupData } from "@/lib/data";
 import { insideAll, overlapZone, type Circle } from "@/lib/geo";
 import { anchorCircle } from "@/lib/matching";
+import { memberColor } from "@/lib/memberColors";
 import type { Locality } from "@/lib/types";
 import { MapView, type MapCircle, type MapPin } from "./MapView";
 import { OverlapLocalities } from "./OverlapLocalities";
 
-const MEMBER_COLORS = ["#4f46e5", "#db2777", "#ea580c", "#0891b2", "#65a30d", "#9333ea"];
-const STATUS_COLORS = { clear: "#0f766e", flagged: "#d97706", ruled_out: "#dc2626" } as const;
+const STATUS_COLORS = { clear: "#19B38A", flagged: "#FFC226", ruled_out: "#D63A18" } as const;
 
 /** Map of everyone's radius (only your own before the reveal) plus the overlap zone's localities. */
 export function WhereToLook({ data }: { data: MemberGroupData }) {
@@ -21,7 +21,7 @@ export function WhereToLook({ data }: { data: MemberGroupData }) {
     circles.push({
       ...circle,
       name: m.is_me ? `${m.display_name} (you)` : m.display_name,
-      color: MEMBER_COLORS[i % MEMBER_COLORS.length],
+      color: memberColor(i).bg,
     });
   });
   const myCircleMissing = !circles.some((c) => c.name.endsWith("(you)"));
@@ -52,10 +52,10 @@ export function WhereToLook({ data }: { data: MemberGroupData }) {
   return (
     <section className="card space-y-4">
       <div>
-        <h2 className="text-lg font-semibold">Where to look</h2>
-        <p className="text-sm text-stone-600">
+        <h2 className="text-2xl font-extrabold">Where to look</h2>
+        <p className="text-sm text-muted">
           {revealed
-            ? "Each circle is one person's radius around their anchor. The shaded teal zone is inside everyone's radius."
+            ? "Each circle is one person's radius around their anchor. The yellow zone is inside everyone's radius."
             : "You see only your own radius for now. Everyone's circles and the shared zone appear once everyone has submitted."}
         </p>
       </div>
@@ -63,8 +63,8 @@ export function WhereToLook({ data }: { data: MemberGroupData }) {
       {circles.length > 0 || pins.length > 0 ? <MapView circles={circles} pins={pins} showOverlap={revealed} /> : null}
 
       {myCircleMissing && !me.submitted && (
-        <p className="text-sm text-stone-600">
-          <Link href={`/g/${group.code}/constraints`} className="font-medium text-teal-700 underline">
+        <p className="text-sm text-muted">
+          <Link href={`/g/${group.code}/constraints`} className="font-medium text-link underline">
             Pick your anchor and radius
           </Link>{" "}
           to see your circle here.
@@ -72,16 +72,16 @@ export function WhereToLook({ data }: { data: MemberGroupData }) {
       )}
 
       {circles.length > 0 && (
-        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600">
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
           {circles.map((c) => (
             <li key={c.name} className="flex items-center gap-1.5">
-              <span className="inline-block size-2.5 rounded-full" style={{ background: c.color }} />
+              <span className="inline-block size-3 rounded-full border-2 border-edge" style={{ background: c.color }} />
               {c.name}: {c.radiusKm} km
             </li>
           ))}
           {pins.length > 0 && (
             <li className="flex items-center gap-1.5">
-              <span className="inline-block size-2.5 rounded-full border border-stone-800 bg-stone-400" />
+              <span className="inline-block size-3 rounded-full border-2 border-edge bg-mint" />
               Listings (by area)
             </li>
           )}
@@ -89,13 +89,13 @@ export function WhereToLook({ data }: { data: MemberGroupData }) {
       )}
 
       {revealed && !everyoneHasAnchor && (
-        <p className="text-sm text-stone-600">
+        <p className="text-sm text-muted">
           Not everyone set an anchor (their answers were submitted before this feature existed), so there's no shared
           zone to show.
         </p>
       )}
       {everyoneHasAnchor && !hasOverlap && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <p className="rounded-lg bg-give px-3 py-2 text-sm text-give-fg">
           The circles don't all overlap, so no place is within everyone's radius. Every listing will be flagged
           for someone. Talk about who can stretch their distance.
         </p>

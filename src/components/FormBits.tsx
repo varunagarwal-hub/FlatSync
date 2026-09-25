@@ -57,14 +57,14 @@ export function SubmitButton({
 export function FormMessage({ state }: { state: ActionState }) {
   if (state?.error) {
     return (
-      <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
+      <p role="alert" className="rounded-lg bg-bad px-3 py-2 text-sm text-bad-fg">
         {state.error}
       </p>
     );
   }
   if (state?.message) {
     return (
-      <p role="status" className="rounded-lg bg-teal-50 px-3 py-2 text-sm text-teal-800">
+      <p role="status" className="rounded-lg bg-get px-3 py-2 text-sm text-get-fg">
         {state.message}
       </p>
     );

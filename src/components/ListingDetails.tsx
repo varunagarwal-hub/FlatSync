@@ -5,17 +5,17 @@ import type { FactField, Listing, Tri } from "@/lib/types";
 
 const TRI_TEXT: Record<Tri, string> = { yes: "Yes", no: "No", unsure: "Not sure" };
 const TRI_TONE: Record<Tri, string> = {
-  yes: "text-teal-800",
-  no: "text-red-700",
-  unsure: "text-amber-700",
+  yes: "text-get-fg",
+  no: "text-bad-fg",
+  unsure: "text-give-fg",
 };
 
 export function ListingStatusBadge({ status }: { status: ListingStatus | "pending" }) {
   const styles = {
-    clear: "bg-teal-50 text-teal-800 ring-teal-200",
-    flagged: "bg-amber-50 text-amber-800 ring-amber-200",
-    ruled_out: "bg-red-50 text-red-800 ring-red-200",
-    pending: "bg-stone-100 text-stone-600 ring-stone-200",
+    clear: "bg-get text-get-fg border-transparent",
+    flagged: "bg-sun text-night border-edge",
+    ruled_out: "bg-bad text-bad-fg border-transparent",
+    pending: "bg-soft text-muted border-transparent",
   }[status];
   const text = {
     clear: "Passes everyone's must-haves",
@@ -23,7 +23,7 @@ export function ListingStatusBadge({ status }: { status: ListingStatus | "pendin
     ruled_out: "Ruled out",
     pending: "Waiting for everyone's constraints",
   }[status];
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${styles}`}>{text}</span>;
+  return <span className={`rounded-full border-[1.5px] px-2.5 py-0.5 text-xs font-bold ${styles}`}>{text}</span>;
 }
 
 /** Area, rent, floor, link and the Yes/No/Not sure facts about a listing. */
@@ -40,15 +40,15 @@ export function ListingDetails({ listing, areaName }: { listing: Listing; areaNa
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h3 className="text-lg font-semibold">{areaName}</h3>
-        <span className="font-medium">{formatINR(listing.total_rent)}/month</span>
-        <span className="text-sm text-stone-500">{formatFloor(listing.floor)}</span>
+        <h3 className="text-xl font-extrabold">{areaName}</h3>
+        <span className="font-bold">{formatINR(listing.total_rent)}/mo</span>
+        <span className="text-sm text-faint">{formatFloor(listing.floor)}</span>
         {listing.url && (
           <a
             href={listing.url}
             target="_blank"
             rel="noopener noreferrer nofollow"
-            className="text-sm font-medium text-teal-700 hover:underline"
+            className="text-sm font-bold text-link underline decoration-2 underline-offset-2"
           >
             View listing ↗
           </a>
@@ -59,11 +59,11 @@ export function ListingDetails({ listing, areaName }: { listing: Listing; areaNa
           const isTri = f.value === "yes" || f.value === "no" || f.value === "unsure";
           return (
             <div key={f.label} className="flex gap-1">
-              <dt className="text-stone-500">{f.label}:</dt>
+              <dt className="text-faint">{f.label}:</dt>
               <dd className={isTri ? TRI_TONE[f.value as Tri] : ""}>
                 {isTri ? TRI_TEXT[f.value as Tri] : f.value}
                 {unconfirmed.includes(f.field) && f.value !== "unsure" && (
-                  <span className="text-amber-700" title="From the pasted listing. Counts as Not sure until confirmed.">
+                  <span className="text-give-fg" title="From the pasted listing. Counts as Not sure until confirmed.">
                     {" "}(from listing, unconfirmed)
                   </span>
                 )}
@@ -73,9 +73,9 @@ export function ListingDetails({ listing, areaName }: { listing: Listing; areaNa
         })}
       </dl>
       {features.length > 0 && (
-        <p className="text-sm text-stone-600">Has: {features.map((f) => f.label).join(", ")}</p>
+        <p className="text-sm text-muted">Has: {features.map((f) => f.label).join(", ")}</p>
       )}
-      {listing.notes && <p className="text-sm italic text-stone-600">“{listing.notes}”</p>}
+      {listing.notes && <p className="text-sm italic text-muted">“{listing.notes}”</p>}
     </div>
   );
 }

@@ -13,10 +13,10 @@ const triOf = (b: boolean | null): Tri => (b === null ? "unsure" : b ? "yes" : "
 function FromListingBadge({ onConfirm }: { onConfirm: () => void }) {
   return (
     <span className="flex items-center gap-2 text-xs">
-      <span className="rounded-full bg-amber-50 px-2 py-0.5 font-medium text-amber-800 ring-1 ring-amber-200">
+      <span className="rounded-full bg-give px-2 py-0.5 font-medium text-give-fg ring-1 ring-sun">
         From listing – not confirmed
       </span>
-      <button type="button" className="font-medium text-teal-700 hover:underline" onClick={onConfirm}>
+      <button type="button" className="font-medium text-link hover:underline" onClick={onConfirm}>
         Confirm
       </button>
     </span>
@@ -61,7 +61,7 @@ function TriField({
               checked={value === o.value}
               onChange={() => onChange(o.value)}
             />
-            <span className="inline-block rounded-md border border-stone-300 px-2.5 py-1 text-xs peer-checked:border-teal-700 peer-checked:bg-teal-700 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-teal-600/40">
+            <span className="inline-block rounded-full border-2 border-edge bg-paper font-bold text-ink peer-focus-visible:ring-4 peer-focus-visible:ring-violet/40 px-3 py-1.5 text-xs peer-checked:bg-violet peer-checked:text-white">
               {o.label}
             </span>
           </label>
@@ -200,7 +200,7 @@ export function ListingForm({ groupId, code, areas }: { groupId: string; code: s
           </div>
           <div>
             <label className="label" htmlFor="url">
-              Link <span className="font-normal text-stone-400">(optional)</span>
+              Link <span className="font-normal text-faint">(optional)</span>
             </label>
             <input
               id="url"
@@ -269,7 +269,7 @@ export function ListingForm({ groupId, code, areas }: { groupId: string; code: s
                   name="bathroomsUnsure"
                   checked={bathroomsUnsure}
                   onChange={(e) => byHand("bathrooms", setBathroomsUnsure)(e.target.checked)}
-                  className="size-4 accent-teal-700"
+                  className="size-4 accent-violet"
                 />
                 Not sure
               </label>
@@ -292,7 +292,7 @@ export function ListingForm({ groupId, code, areas }: { groupId: string; code: s
 
         <section className="card">
           <label className="label" htmlFor="notes">
-            Notes <span className="font-normal text-stone-400">(optional)</span>
+            Notes <span className="font-normal text-faint">(optional)</span>
           </label>
           <textarea
             id="notes"
@@ -306,7 +306,7 @@ export function ListingForm({ groupId, code, areas }: { groupId: string; code: s
         </section>
 
         {fromListing.length > 0 && (
-          <p className="text-sm text-amber-800">
+          <p className="text-sm text-give-fg">
             {fromListing.length} must-have fact{fromListing.length === 1 ? "" : "s"} still marked “From listing – not
             confirmed”. That's fine: they count as Not sure until someone confirms them on the listings page.
           </p>

@@ -85,7 +85,7 @@ export function PasteListing({ groupId, onExtracted }: { groupId: string; onExtr
   }
 
   return (
-    <section className="card space-y-3 border-teal-200">
+    <section className="card space-y-3 border-violet">
       <div>
         <h2 className="font-semibold">Paste listing</h2>
         <p className="hint">
@@ -114,9 +114,9 @@ export function PasteListing({ groupId, onExtracted }: { groupId: string; onExtr
           />
         </label>
         {file && (
-          <span className="flex items-center gap-2 text-stone-600">
+          <span className="flex items-center gap-2 text-muted">
             {file.name}
-            <button type="button" className="text-xs text-teal-700 hover:underline" onClick={() => setFile(null)}>
+            <button type="button" className="text-xs text-link hover:underline" onClick={() => setFile(null)}>
               Remove
             </button>
           </span>
@@ -126,17 +126,17 @@ export function PasteListing({ groupId, onExtracted }: { groupId: string; onExtr
         <button type="button" className="btn-primary" onClick={extract} disabled={busy}>
           {busy ? "Reading listing…" : "Fill form from listing"}
         </button>
-        <button type="button" className="text-sm text-stone-500 hover:underline" onClick={() => setOpen(false)}>
+        <button type="button" className="text-sm text-faint hover:underline" onClick={() => setOpen(false)}>
           Close
         </button>
       </div>
       {error && (
-        <p role="alert" className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <p role="alert" className="rounded-lg bg-give px-3 py-2 text-sm text-give-fg">
           {error}
         </p>
       )}
       {done && (
-        <p role="status" className="rounded-lg bg-teal-50 px-3 py-2 text-sm text-teal-800">
+        <p role="status" className="rounded-lg bg-get px-3 py-2 text-sm text-get-fg">
           Filled in below. Check every field before adding. Must-have facts are marked “From listing – not confirmed” and
           count as Not sure until someone confirms them.
         </p>

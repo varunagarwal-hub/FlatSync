@@ -17,11 +17,16 @@ export function ShareCode({ code }: { code: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-stone-500">Code</span>
-      <span className="rounded-md bg-stone-100 px-2 py-1 font-mono text-sm tracking-widest">{code}</span>
-      <button type="button" onClick={copy} className="text-xs font-medium text-teal-700 hover:underline">
-        {copied ? "Copied" : "Copy invite"}
+    <div className="flex items-center overflow-hidden rounded-full border-2 border-edge bg-paper shadow-[3px_3px_0_var(--shadow)]">
+      <span className="px-3 py-2 font-mono text-sm font-bold tracking-[0.2em]" aria-label={`Group code ${code}`}>
+        {code}
+      </span>
+      <button
+        type="button"
+        onClick={copy}
+        className="min-h-10 border-l-2 border-edge bg-sun px-3 text-xs font-bold text-night hover:brightness-95 focus-visible:ring-4 focus-visible:ring-violet/40 focus-visible:outline-none"
+      >
+        {copied ? "Copied!" : "Copy invite"}
       </button>
     </div>
   );

@@ -1,21 +1,33 @@
 import type { MemberBreakdown } from "@/lib/matching";
+import type { MemberColor } from "@/lib/memberColors";
+import { Avatar } from "./Avatar";
 
-export function PersonBreakdown({ person }: { person: MemberBreakdown }) {
+/** One person's row on an option card: what they get (green) and give up (amber). */
+export function PersonBreakdown({ person, color }: { person: MemberBreakdown; color: MemberColor }) {
   return (
-    <div className="rounded-lg bg-stone-50 p-3">
-      <h4 className="mb-2 text-sm font-semibold">{person.name}</h4>
-      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-teal-700">Gets</p>
-      <ul className="mb-3 space-y-0.5 text-sm">
-        {person.gets.length ? person.gets.map((g) => <li key={g}>✓ {g}</li>) : <li className="text-stone-400">—</li>}
-      </ul>
-      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-amber-700">Compromising on</p>
-      <ul className="space-y-0.5 text-sm">
-        {person.compromises.length ? (
-          person.compromises.map((c) => <li key={c}>• {c}</li>)
+    <div className="flex items-start gap-3 px-4 py-3">
+      <Avatar name={person.name} color={color} size={30} />
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <p className="text-sm font-bold">{person.name}</p>
+        <ul className="flex flex-wrap gap-1.5" aria-label={`What ${person.name} gets`}>
+          {person.gets.map((g) => (
+            <li key={g} className="chip-get">
+              {g}
+            </li>
+          ))}
+        </ul>
+        {person.compromises.length > 0 ? (
+          <ul className="flex flex-wrap gap-1.5" aria-label={`What ${person.name} gives up`}>
+            {person.compromises.map((c) => (
+              <li key={c} className="chip-give">
+                {c}
+              </li>
+            ))}
+          </ul>
         ) : (
-          <li className="text-stone-400">Nothing</li>
+          <p className="text-xs font-medium text-get-fg">Not giving anything up</p>
         )}
-      </ul>
+      </div>
     </div>
   );
 }

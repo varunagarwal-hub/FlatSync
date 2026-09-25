@@ -21,7 +21,7 @@ export default async function ConstraintsPage({ params }: { params: Promise<{ co
         <div className="card space-y-3">
           <div>
             <h2 className="text-lg font-semibold">Your constraints are submitted</h2>
-            <p className="text-sm text-stone-600">
+            <p className="text-sm text-muted">
               {data.revealed
                 ? "Everyone has submitted, so all answers are now visible to the group."
                 : "They're locked, and hidden from the others until everyone submits."}
@@ -39,7 +39,7 @@ export default async function ConstraintsPage({ params }: { params: Promise<{ co
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold">Your constraints</h2>
-        <p className="text-sm text-stone-600">
+        <p className="text-sm text-muted">
           Private until everyone in the group submits. Nobody, including you, can see anyone else's answers before then.
         </p>
       </div>

@@ -49,20 +49,20 @@ export function OverlapLocalities({
 
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-semibold">Localities inside everyone's radius</h3>
+      <h3 className="text-lg font-extrabold">Search inside the yellow zone</h3>
       {all.length > 0 && (
-        <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200">
+        <ul className="divide-y-2 divide-dashed divide-line overflow-hidden rounded-[18px] border-2 border-edge bg-paper">
           {all.map((l) => (
-            <li key={l.name} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
+            <li key={l.name} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm font-bold">
               <span>
                 {l.name}
-                {l.city && <span className="text-stone-400">, {l.city}</span>}
+                {l.city && <span className="text-faint">, {l.city}</span>}
               </span>
               <span className="flex gap-2">
-                <a className="btn-secondary px-3 py-1 text-xs" href={noBrokerUrl(l.name, l.city)} target="_blank" rel="noopener noreferrer">
+                <a className="btn-secondary min-h-9 px-3 py-1 text-xs" href={noBrokerUrl(l.name, l.city)} target="_blank" rel="noopener noreferrer">
                   NoBroker ↗
                 </a>
-                <a className="btn-secondary px-3 py-1 text-xs" href={acres99Url(l.name, l.city)} target="_blank" rel="noopener noreferrer">
+                <a className="btn-secondary min-h-9 px-3 py-1 text-xs" href={acres99Url(l.name, l.city)} target="_blank" rel="noopener noreferrer">
                   99acres ↗
                 </a>
               </span>
@@ -70,10 +70,10 @@ export function OverlapLocalities({
           ))}
         </ul>
       )}
-      {looked === null && !error && <p className="text-sm text-stone-500">Looking up localities in the overlap zone…</p>}
-      {error && <p className="text-sm text-amber-800">{error}</p>}
+      {looked === null && !error && <p className="text-sm text-faint">Looking up localities in the overlap zone…</p>}
+      {error && <p className="text-sm text-give-fg">{error}</p>}
       {looked !== null && all.length === 0 && (
-        <p className="text-sm text-stone-500">No named localities found in the overlap zone.</p>
+        <p className="text-sm text-faint">No named localities found in the overlap zone.</p>
       )}
       <p className="hint">
         These open each site's own search in a new tab. Found something? Add it here with “Add listing” or “Paste listing”.

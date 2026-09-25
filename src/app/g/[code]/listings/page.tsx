@@ -31,7 +31,7 @@ export default async function ListingsPage({ params }: { params: Promise<{ code:
       </div>
 
       {listings.length === 0 && (
-        <p className="card text-sm text-stone-600">
+        <p className="card text-sm text-muted">
           No listings yet. Anyone in the group can add one they've found. This app never searches for listings itself.
         </p>
       )}
@@ -46,14 +46,14 @@ export default async function ListingsPage({ params }: { params: Promise<{ code:
                 <ListingStatusBadge status={r?.status ?? "pending"} />
               </div>
               {r && r.ruledOutReasons.length > 0 && (
-                <ul className="list-disc pl-5 text-sm text-red-800">
+                <ul className="list-disc pl-5 text-sm text-bad-fg">
                   {r.ruledOutReasons.map((reason) => (
                     <li key={reason}>{reason}</li>
                   ))}
                 </ul>
               )}
               {r && r.confirmReasons.length > 0 && (
-                <ul className="list-disc pl-5 text-sm text-amber-800">
+                <ul className="list-disc pl-5 text-sm text-give-fg">
                   {r.confirmReasons.map((reason) => (
                     <li key={reason}>{reason}</li>
                   ))}

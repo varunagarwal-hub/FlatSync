@@ -62,14 +62,14 @@ export function AnchorPicker({
       <input type="hidden" name="radiusKm" value={radius ?? ""} />
 
       {anchor ? (
-        <div className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-stone-50 px-3 py-2 text-sm">
+        <div className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-soft px-3 py-2 text-sm">
           <span>
-            <span className="text-stone-500">Anchor: </span>
+            <span className="text-faint">Anchor: </span>
             {anchor.label}
           </span>
           <button
             type="button"
-            className="text-xs font-medium text-teal-700 hover:underline"
+            className="text-xs font-medium text-link hover:underline"
             onClick={() => {
               onAnchor(null);
               setResults(null);
@@ -103,20 +103,20 @@ export function AnchorPicker({
             </button>
           </div>
           {error && (
-            <p role="alert" className="text-sm text-red-700">
+            <p role="alert" className="text-sm text-bad-fg">
               {error}
             </p>
           )}
           {results && results.length === 0 && (
-            <p className="text-sm text-stone-600">No matches. Try adding the city, e.g. “Ecospace, Bengaluru”.</p>
+            <p className="text-sm text-muted">No matches. Try adding the city, e.g. “Ecospace, Bengaluru”.</p>
           )}
           {results && results.length > 0 && (
-            <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200">
+            <ul className="divide-y divide-line rounded-lg border border-line">
               {results.map((p) => (
                 <li key={`${p.lat},${p.lng}`}>
                   <button
                     type="button"
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-stone-50"
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-soft"
                     onClick={() => onAnchor({ label: p.label, lat: p.lat, lng: p.lng })}
                   >
                     {p.label}
@@ -140,7 +140,7 @@ export function AnchorPicker({
               checked={radius === r}
               onChange={() => onRadius(r)}
             />
-            <span className="inline-block rounded-md border border-stone-300 px-3 py-1 text-sm peer-checked:border-teal-700 peer-checked:bg-teal-700 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-teal-600/40">
+            <span className="inline-block rounded-full border-2 border-edge bg-paper font-bold text-ink peer-focus-visible:ring-4 peer-focus-visible:ring-violet/40 min-h-10 px-4 py-2 text-sm peer-checked:bg-violet peer-checked:text-white">
               {r} km
             </span>
           </label>

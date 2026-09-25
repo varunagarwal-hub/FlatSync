@@ -1,15 +1,19 @@
 import { niceToHaveLabel } from "@/lib/constants";
 import { formatINR } from "@/lib/format";
+import type { MemberColor } from "@/lib/memberColors";
 import type { Area, AreaRating, MemberConstraints } from "@/lib/types";
+import { Avatar } from "./Avatar";
 
 /** Read-only view of one member's answers. */
 export function ConstraintsSummary({
   name,
+  color,
   c,
   areas,
   ratings,
 }: {
   name: string;
+  color?: MemberColor;
   c: MemberConstraints;
   areas: Area[];
   ratings: AreaRating[];
@@ -26,8 +30,11 @@ export function ConstraintsSummary({
   ].filter(Boolean);
 
   return (
-    <div className="rounded-lg bg-stone-50 p-3 text-sm">
-      <h3 className="mb-2 font-semibold">{name}</h3>
+    <div className="rounded-2xl border-2 border-line bg-soft p-3.5 text-sm">
+      <h3 className="mb-2.5 flex items-center gap-2 text-base font-extrabold">
+        {color && <Avatar name={name} color={color} size={26} />}
+        {name}
+      </h3>
       <dl className="space-y-1">
         <Row label="Max share" value={formatINR(c.max_rent_share)} />
         <Row
@@ -46,7 +53,7 @@ export function ConstraintsSummary({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-2">
-      <dt className="w-28 shrink-0 text-stone-500">{label}</dt>
+      <dt className="w-28 shrink-0 text-faint">{label}</dt>
       <dd>{value}</dd>
     </div>
   );

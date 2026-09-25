@@ -54,13 +54,13 @@ export function MapView({
         L.circle([c.lat, c.lng], {
           radius: c.radiusKm * 1000,
           color: c.color,
-          weight: 2,
+          weight: 3,
           fillColor: c.color,
-          fillOpacity: 0.06,
+          fillOpacity: 0.1,
         })
           .bindTooltip(`${c.name}: ${c.radiusKm} km`)
           .addTo(map);
-        L.circleMarker([c.lat, c.lng], { radius: 5, color: "#fff", weight: 2, fillColor: c.color, fillOpacity: 1 })
+        L.circleMarker([c.lat, c.lng], { radius: 7, color: "#1B1740", weight: 2.5, fillColor: c.color, fillOpacity: 1 })
           .bindTooltip(`${c.name}'s anchor`)
           .addTo(map);
         // circle.getBounds() needs the map to have a view already; this doesn't
@@ -72,7 +72,7 @@ export function MapView({
         for (const poly of zone) {
           L.polygon(
             poly.map((ring) => ring.map(([lng, lat]) => [lat, lng] as [number, number])),
-            { color: "#0f766e", weight: 2.5, fillColor: "#14b8a6", fillOpacity: 0.32 },
+            { color: "#1B1740", weight: 3, fillColor: "#FFC226", fillOpacity: 0.55 },
           )
             .bindTooltip("Inside everyone's radius")
             .addTo(map);
@@ -80,7 +80,7 @@ export function MapView({
       }
 
       for (const p of pins) {
-        L.circleMarker([p.lat, p.lng], { radius: 6, color: "#1c1917", weight: 1.5, fillColor: p.color, fillOpacity: 0.95 })
+        L.circleMarker([p.lat, p.lng], { radius: 7, color: "#1B1740", weight: 2, fillColor: p.color, fillOpacity: 1 })
           .bindTooltip(p.label)
           .addTo(map);
         bounds.extend([p.lat, p.lng]);
@@ -98,5 +98,5 @@ export function MapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return <div ref={ref} style={{ height }} className="z-0 w-full overflow-hidden rounded-lg border border-stone-200" />;
+  return <div ref={ref} style={{ height }} className="z-0 w-full overflow-hidden rounded-[18px] border-2 border-edge" />;
 }

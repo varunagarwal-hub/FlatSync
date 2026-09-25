@@ -32,7 +32,7 @@ function FactRow({ listing, field, code }: { listing: Listing; field: FactField;
       <input type="hidden" name="field" value={field} />
       <span>
         <span className="font-medium">{LABELS[field]}:</span>{" "}
-        <span className="text-amber-800">{current(listing, field)}</span>
+        <span className="text-give-fg">{current(listing, field)}</span>
       </span>
       {field === "bathrooms" ? (
         <span className="flex items-center gap-2">
@@ -76,11 +76,11 @@ export function ListingFacts({ listing, code }: { listing: Listing; code: string
   );
   if (!fields.length) return null;
   return (
-    <details className="rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-1">
-      <summary className="cursor-pointer py-1 text-sm font-medium text-amber-900">
+    <details className="rounded-lg border border-sun bg-give/50 px-3 py-1">
+      <summary className="cursor-pointer py-1 text-sm font-medium text-give-fg">
         {fields.length} fact{fields.length === 1 ? "" : "s"} to confirm (called the owner or visited? Update them here)
       </summary>
-      <div className="divide-y divide-amber-100">
+      <div className="divide-y divide-give">
         {fields.map((f) => (
           <FactRow key={f} listing={listing} field={f} code={code} />
         ))}

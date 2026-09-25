@@ -1,31 +1,186 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+/*
+ * FlatSync "bold & playful": lilac ground, white sticker cards with ink
+ * outlines and hard offset shadows, coral / violet / mint / sunflower accents.
+ * Semantic colours live in CSS variables so dark mode only swaps values.
+ */
+:root {
+  --ground: #f3eeff;
+  --paper: #ffffff;
+  --ink: #1b1740; /* text */
+  --edge: #1b1740; /* bold outlines */
+  --shadow: #1b1740; /* sticker shadows */
+  --muted: #4a4570;
+  --faint: #6b6690;
+  --line: #d9d0f5;
+  --soft: #ede7ff;
+  --link: #5536d6;
+  --get: #ddf6ee;
+  --get-fg: #0b5c45;
+  --give: #ffe9c2;
+  --give-fg: #7a4a00;
+  --bad: #ffe1d9;
+  --bad-fg: #b3300f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --ground: #14112b;
+    --paper: #211c44;
+    --ink: #f3eeff;
+    --edge: #0b0920;
+    --shadow: #6c4cf1;
+    --muted: #cfc7f3;
+    --faint: #a59cd4;
+    --line: #3a3470;
+    --soft: #2c2658;
+    --link: #b3a3ff;
+    --get: #0f3d31;
+    --get-fg: #86e8c8;
+    --give: #4a3505;
+    --give-fg: #ffd37a;
+    --bad: #4a1509;
+    --bad-fg: #ffa38c;
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-display: var(--font-bricolage), var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --color-ground: var(--ground);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-edge: var(--edge);
+  --color-shadow: var(--shadow);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-soft: var(--soft);
+  --color-link: var(--link);
+  --color-get: var(--get);
+  --color-get-fg: var(--get-fg);
+  --color-give: var(--give);
+  --color-give-fg: var(--give-fg);
+  --color-bad: var(--bad);
+  --color-bad-fg: var(--bad-fg);
+
+  /* fixed brand accents (same in both themes) */
+  --color-coral: #ff5a36;
+  --color-violet: #6c4cf1;
+  --color-mint: #19b38a;
+  --color-sun: #ffc226;
+  --color-night: #1b1740;
 }
 
 body {
-  @apply bg-stone-50 text-stone-900 antialiased;
+  @apply bg-ground text-ink font-sans antialiased;
 }
 
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* A white "sticker": ink outline and a hard offset shadow. */
 @utility card {
-  @apply rounded-xl border border-stone-200 bg-white p-5 shadow-sm;
+  @apply rounded-[22px] border-2 border-edge bg-paper p-5;
+  box-shadow: 5px 5px 0 var(--shadow);
+}
+@utility card-flat {
+  @apply rounded-[18px] border-2 border-edge bg-paper p-4;
 }
 @utility label {
-  @apply mb-1 block text-sm font-medium text-stone-700;
+  @apply mb-1 block text-sm font-bold text-ink;
 }
 @utility input {
-  @apply w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 disabled:bg-stone-100;
+  @apply w-full rounded-[14px] border-2 border-edge bg-paper px-3 py-2.5 text-base text-ink outline-none placeholder:text-faint focus:ring-4 focus:ring-violet/30 disabled:opacity-60;
 }
 @utility btn {
-  @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border-2 border-edge px-5 py-2 text-sm font-bold transition-transform disabled:cursor-not-allowed disabled:opacity-50;
+  box-shadow: 3px 3px 0 var(--shadow);
+  &:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--shadow);
+  }
+  &:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--shadow);
+  }
+  &:focus-visible {
+    @apply outline-none ring-4 ring-violet/40;
+  }
 }
 @utility btn-primary {
-  @apply btn bg-teal-700 text-white hover:bg-teal-800;
+  @apply btn bg-coral text-night;
 }
 @utility btn-secondary {
-  @apply btn border border-stone-300 bg-white text-stone-800 hover:bg-stone-100;
+  @apply btn bg-paper text-ink;
+}
+@utility btn-sun {
+  @apply btn bg-sun text-night;
 }
 @utility hint {
-  @apply text-xs text-stone-500;
+  @apply text-xs text-faint;
+}
+@utility chip {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
+@utility chip-get {
+  @apply chip bg-get text-get-fg;
+}
+@utility chip-give {
+  @apply chip bg-give text-give-fg;
+}
+@utility chip-bad {
+  @apply chip bg-bad text-bad-fg;
+}
+@utility pill-dark {
+  @apply inline-flex items-center rounded-full bg-night px-2.5 py-0.5 text-xs font-bold text-white;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pop-in {
+    animation: pop-in 520ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+  .pop-in-2 {
+    animation-delay: 120ms;
+  }
+  .pop-in-3 {
+    animation-delay: 240ms;
+  }
+  .pop-in-4 {
+    animation-delay: 360ms;
+  }
+  .pop-in-5 {
+    animation-delay: 480ms;
+  }
+  .pop-in-6 {
+    animation-delay: 600ms;
+  }
+}
+@keyframes pop-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Leaflet sits inside sticker frames */
+.leaflet-container {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }

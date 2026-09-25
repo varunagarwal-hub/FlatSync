@@ -32,7 +32,7 @@ export function RateNewAreasForm({ groupId, code, areas }: { groupId: string; co
   const { state, pending, onSubmit } = useControlledFormAction(rateNewAreas);
   const [ratings, setRatings] = useState<Record<string, RatingValue>>({});
   return (
-    <form onSubmit={onSubmit} className="card space-y-3 border-amber-200">
+    <form onSubmit={onSubmit} className="card space-y-3 border-sun">
       <input type="hidden" name="groupId" value={groupId} />
       <input type="hidden" name="code" value={code} />
       <div>

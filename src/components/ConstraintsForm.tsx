@@ -141,7 +141,7 @@ export function ConstraintsForm({
 
       <div className="space-y-3">
         <FormMessage state={state} />
-        <p className="text-sm text-stone-600">
+        <p className="text-sm text-muted">
           Your answers stay private until everyone in the group submits. Once you submit, they're locked.
           {missing.length > 0 && ` To submit, ${missing.join(" and ")}.`}
         </p>
@@ -179,7 +179,7 @@ function Checkbox({
         value={value}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="size-4 accent-teal-700"
+        className="size-4 accent-violet"
       />
       {label}
     </label>
