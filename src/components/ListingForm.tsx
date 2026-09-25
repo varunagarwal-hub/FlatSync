@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { addListing } from "@/app/actions/listings";
 import { NICE_TO_HAVES } from "@/lib/constants";
 import type { Area, Tri } from "@/lib/types";
-import { FormMessage, SubmitButton } from "./FormBits";
+import { FormMessage, SubmitButton, useControlledFormAction } from "./FormBits";
 
 const TRI_OPTIONS: { value: Tri; label: string }[] = [
   { value: "yes", label: "Yes" },
@@ -49,7 +49,7 @@ function TriField({
 
 // Controlled so a failed save never wipes what you typed.
 export function ListingForm({ groupId, code, areas }: { groupId: string; code: string; areas: Area[] }) {
-  const [state, action] = useActionState(addListing, undefined);
+  const { state, pending, onSubmit } = useControlledFormAction(addListing);
   const [areaId, setAreaId] = useState(areas.length ? "" : "__new");
   const [newArea, setNewArea] = useState("");
   const [totalRent, setTotalRent] = useState("");
@@ -66,7 +66,7 @@ export function ListingForm({ groupId, code, areas }: { groupId: string; code: s
   );
 
   return (
-    <form action={action} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
       <input type="hidden" name="groupId" value={groupId} />
       <input type="hidden" name="code" value={code} />
 
@@ -215,7 +215,9 @@ export function ListingForm({ groupId, code, areas }: { groupId: string; code: s
       </section>
 
       <FormMessage state={state} />
-      <SubmitButton pendingText="Adding…">Add listing</SubmitButton>
+      <SubmitButton pendingText="Adding…" pending={pending}>
+        Add listing
+      </SubmitButton>
     </form>
   );
 }

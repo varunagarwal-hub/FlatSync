@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { addArea, rateNewAreas } from "@/app/actions/constraints";
 import type { Area } from "@/lib/types";
 import { AreaRatingList, type RatingValue } from "./AreaRatingList";
-import { FormMessage, SubmitButton } from "./FormBits";
+import { FormMessage, SubmitButton, useControlledFormAction } from "./FormBits";
 
 export function AddAreaForm({ groupId, code }: { groupId: string; code: string }) {
   const [state, action] = useActionState(addArea, undefined);
@@ -29,10 +29,10 @@ export function AddAreaForm({ groupId, code }: { groupId: string; code: string }
 
 /** For areas added after you submitted. Existing ratings can't change. */
 export function RateNewAreasForm({ groupId, code, areas }: { groupId: string; code: string; areas: Area[] }) {
-  const [state, action] = useActionState(rateNewAreas, undefined);
+  const { state, pending, onSubmit } = useControlledFormAction(rateNewAreas);
   const [ratings, setRatings] = useState<Record<string, RatingValue>>({});
   return (
-    <form action={action} className="card space-y-3 border-amber-200">
+    <form onSubmit={onSubmit} className="card space-y-3 border-amber-200">
       <input type="hidden" name="groupId" value={groupId} />
       <input type="hidden" name="code" value={code} />
       <div>
@@ -41,7 +41,7 @@ export function RateNewAreasForm({ groupId, code, areas }: { groupId: string; co
       </div>
       <AreaRatingList areas={areas} value={ratings} onChange={(id, v) => setRatings((r) => ({ ...r, [id]: v }))} />
       <FormMessage state={state} />
-      <SubmitButton>Save ratings</SubmitButton>
+      <SubmitButton pending={pending}>Save ratings</SubmitButton>
     </form>
   );
 }

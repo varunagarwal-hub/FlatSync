@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { saveConstraints } from "@/app/actions/constraints";
 import { NICE_TO_HAVES } from "@/lib/constants";
 import type { Area, AreaRating, MemberConstraints } from "@/lib/types";
 import { AreaRatingList, type RatingValue } from "./AreaRatingList";
-import { FormMessage, SubmitButton } from "./FormBits";
+import { FormMessage, SubmitButton, useControlledFormAction } from "./FormBits";
 
 // Inputs are controlled so a failed save never wipes what you typed.
 export function ConstraintsForm({
@@ -21,7 +21,7 @@ export function ConstraintsForm({
   existing: MemberConstraints | null;
   myRatings: AreaRating[];
 }) {
-  const [state, action] = useActionState(saveConstraints, undefined);
+  const { state, pending, onSubmit } = useControlledFormAction(saveConstraints);
   const [maxRent, setMaxRent] = useState(existing ? String(existing.max_rent_share) : "");
   const [needsLift, setNeedsLift] = useState(existing?.needs_lift ?? false);
   const [needsParking, setNeedsParking] = useState(existing?.needs_parking ?? false);
@@ -35,7 +35,7 @@ export function ConstraintsForm({
   const unrated = areas.filter((a) => !ratings[a.id]).length;
 
   return (
-    <form action={action} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
       <input type="hidden" name="groupId" value={groupId} />
       <input type="hidden" name="code" value={code} />
 
@@ -121,10 +121,10 @@ export function ConstraintsForm({
           {unrated > 0 && ` Rate all areas to submit (${unrated} left).`}
         </p>
         <div className="flex flex-wrap gap-2">
-          <SubmitButton name="intent" value="draft" variant="secondary">
+          <SubmitButton name="intent" value="draft" variant="secondary" pending={pending}>
             Save draft
           </SubmitButton>
-          <SubmitButton name="intent" value="submit" pendingText="Submitting…">
+          <SubmitButton name="intent" value="submit" pendingText="Submitting…" pending={pending}>
             Submit and lock
           </SubmitButton>
         </div>
