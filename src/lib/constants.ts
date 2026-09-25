@@ -1,4 +1,6 @@
-export const GROUP_SIZE = 3;
+export const MIN_GROUP_SIZE = 2;
+export const MAX_GROUP_SIZE = 6;
+export const DEFAULT_GROUP_SIZE = 3;
 
 export const NICE_TO_HAVES = [
   { key: "furnished", label: "Furnished" },

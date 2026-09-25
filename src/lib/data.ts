@@ -1,6 +1,5 @@
 import "server-only";
 import { cache } from "react";
-import { GROUP_SIZE } from "./constants";
 import { matchListings, type MatchSummary } from "./matching";
 import { createClient } from "./supabase/server";
 import type { Area, AreaRating, Group, Listing, MemberConstraints, MemberStatus } from "./types";
@@ -18,6 +17,8 @@ export type GroupData =
       constraints: MemberConstraints[];
       ratings: AreaRating[];
       revealed: boolean;
+      /** Whether you created the group (only the creator can change its size). */
+      isCreator: boolean;
       match: MatchSummary | null;
     };
 
@@ -36,7 +37,7 @@ export const loadGroup = cache(async (rawCode: string): Promise<GroupData> => {
   // RLS only returns the group if the caller is a member.
   const { data: group } = await supabase
     .from("groups")
-    .select("id, code, name, created_at, overlap_localities")
+    .select("id, code, name, created_at, size, created_by, overlap_localities")
     .eq("code", code)
     .maybeSingle<Group>();
   if (!group) return { kind: "not-member" };
@@ -70,7 +71,7 @@ export const loadGroup = cache(async (rawCode: string): Promise<GroupData> => {
   const ratings = ratingsRes.data ?? [];
   const areas = areasRes.data ?? [];
   const listings = listingsRes.data ?? [];
-  const revealed = members.length === GROUP_SIZE && members.every((m) => m.submitted);
+  const revealed = members.length === group.size && members.every((m) => m.submitted);
 
   const match = revealed
     ? matchListings({
@@ -82,5 +83,6 @@ export const loadGroup = cache(async (rawCode: string): Promise<GroupData> => {
       })
     : null;
 
-  return { kind: "member", group, members, me, areas, listings, constraints, ratings, revealed, match };
+  const isCreator = group.created_by === user.id;
+  return { kind: "member", group, members, me, areas, listings, constraints, ratings, revealed, isCreator, match };
 });

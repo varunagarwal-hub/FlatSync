@@ -40,7 +40,7 @@ export default async function ConstraintsPage({ params }: { params: Promise<{ co
       <div>
         <h2 className="text-lg font-semibold">Your constraints</h2>
         <p className="text-sm text-stone-600">
-          Private until all 3 of you submit. Nobody, including you, can see anyone else's answers before then.
+          Private until everyone in the group submits. Nobody, including you, can see anyone else's answers before then.
         </p>
       </div>
       <ConstraintsForm groupId={group.id} code={group.code} areas={areas} existing={mine} myRatings={myRatings} />

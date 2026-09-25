@@ -5,7 +5,7 @@ import { Counter } from "@/components/Counter";
 import { ShortlistCard } from "@/components/ShortlistCard";
 import { SubmissionStatus } from "@/components/SubmissionStatus";
 import { WhereToLook } from "@/components/WhereToLook";
-import { GROUP_SIZE } from "@/lib/constants";
+import { GroupSizeControl } from "@/components/GroupSizeControl";
 import { loadGroup, type MemberGroupData } from "@/lib/data";
 import { formatINR, joinNames } from "@/lib/format";
 import { TOP_N } from "@/lib/matching";
@@ -71,7 +71,12 @@ export default async function GroupOverview({ params }: { params: Promise<{ code
       <WhereToLook data={data} />
 
       <div className="grid gap-6 sm:grid-cols-2">
-        <SubmissionStatus members={members} />
+        <div className="space-y-3">
+          <SubmissionStatus members={members} size={group.size} />
+          {data.isCreator && !data.revealed && (
+            <GroupSizeControl groupId={group.id} code={group.code} size={group.size} joined={members.length} />
+          )}
+        </div>
         {data.revealed && (
           <div className="card space-y-3 sm:col-span-2">
             <h2 className="font-semibold">Everyone's constraints</h2>
@@ -93,11 +98,11 @@ export default async function GroupOverview({ params }: { params: Promise<{ code
 function Waiting({ data }: { data: MemberGroupData }) {
   const { members, me, group } = data;
   const missing = members.filter((m) => !m.submitted && !m.is_me).map((m) => m.display_name);
-  const toJoin = GROUP_SIZE - members.length;
+  const toJoin = group.size - members.length;
 
   return (
     <section className="card space-y-3">
-      <h2 className="text-lg font-semibold">The shortlist appears once all {GROUP_SIZE} of you have submitted</h2>
+      <h2 className="text-lg font-semibold">The shortlist appears once all {group.size} of you have submitted</h2>
       <ul className="list-disc space-y-1 pl-5 text-sm text-stone-700">
         {!me.submitted && (
           <li>

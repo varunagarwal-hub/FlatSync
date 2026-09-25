@@ -24,6 +24,9 @@ const users = {
   bea: "00000000-0000-0000-0000-00000000000b",
   chitra: "00000000-0000-0000-0000-00000000000c",
   dev: "00000000-0000-0000-0000-00000000000d",
+  eve: "00000000-0000-0000-0000-00000000000e",
+  fay: "00000000-0000-0000-0000-00000000000f",
+  gus: "00000000-0000-0000-0000-000000000010",
 };
 
 let db: PGlite;
@@ -66,7 +69,7 @@ beforeAll(async () => {
   db = new PGlite();
   await db.exec(SUPABASE_STUB);
   await db.exec(Object.values(users).map((id) => `insert into auth.users values ('${id}');`).join("\n"));
-  for (const file of ["0001_init.sql", "0002_maps_and_paste.sql"]) {
+  for (const file of ["0001_init.sql", "0002_maps_and_paste.sql", "0003_group_size.sql"]) {
     await db.exec(readFileSync(join(__dirname, "../migrations", file), "utf8"));
   }
 }, 30_000);
@@ -91,7 +94,7 @@ describe("groups and membership", () => {
 
   it("re-joining is a no-op and a 4th member is refused", async () => {
     await q(users.bea, "select join_group($1, 'Bea')", [code]);
-    await expect(q(users.dev, "select join_group($1, 'Dev')", [code])).rejects.toThrow(/already has 3 members/);
+    await expect(q(users.dev, "select join_group($1, 'Dev')", [code])).rejects.toThrow("This group is full (3 people)");
     expect(await q(users.asha, "select * from members")).toHaveLength(3);
   });
 
@@ -254,5 +257,52 @@ describe("0002: maps and pasted listings", () => {
     const [{ code: code2 }] = await q<{ code: string }>(users.dev, "select create_group('Other', 'Dev') as code");
     const [{ id: group2 }] = await q<{ id: string }>(users.dev, "select id from groups where code = $1", [code2]);
     await expect(q(users.dev, "select set_overlap_localities($1, $2)", [group2, data])).rejects.toThrow(/once everyone has submitted/);
+  });
+});
+
+describe("0003: group size", () => {
+  const ratingsFor = async (user: string, g: string) => {
+    const areas = await q<{ id: string }>(user, "select id from areas where group_id = $1", [g]);
+    return Object.fromEntries(areas.map((a) => [a.id, true]));
+  };
+
+  it("existing groups default to 3", async () => {
+    const [row] = await q(users.asha, "select size from groups where id = $1", [group]);
+    expect(row).toEqual({ size: 3 });
+  });
+
+  it("rejects sizes outside 2 to 6", async () => {
+    await expect(q(users.eve, "select create_group('Big', 'Eve', 7)")).rejects.toThrow(/2 to 6/);
+    await expect(q(users.eve, "select create_group('Solo', 'Eve', 1)")).rejects.toThrow(/2 to 6/);
+  });
+
+  it("a group of 2 reveals once both submit, and is full at 2", async () => {
+    const [{ code: c }] = await q<{ code: string }>(users.eve, "select create_group('Pair', 'Eve', 2) as code");
+    const [{ id: g }] = await q<{ id: string }>(users.eve, "select id from groups where code = $1", [c]);
+    await q(users.fay, "select join_group($1, 'Fay')", [c]);
+    await expect(q(users.gus, "select join_group($1, 'Gus')", [c])).rejects.toThrow(/full \(2 people\)/);
+
+    await q(users.eve, "select add_area($1, 'Indiranagar')", [g]);
+    await save(users.eve, g, 25000, await ratingsFor(users.eve, g), true);
+    expect(await q(users.fay, "select * from member_constraints")).toHaveLength(0); // still hidden
+    await save(users.fay, g, 25000, await ratingsFor(users.fay, g), true);
+    expect(await q(users.eve, "select group_revealed($1) as r", [g])).toEqual([{ r: true }]);
+    expect(await q(users.eve, "select * from member_constraints")).toHaveLength(2);
+  });
+
+  it("a group of 4 waits for the 4th person; the creator can shrink it to 3 instead", async () => {
+    const [{ code: c }] = await q<{ code: string }>(users.dev, "select create_group('Four', 'Dev', 4) as code");
+    const [{ id: g }] = await q<{ id: string }>(users.dev, "select id from groups where code = $1", [c]);
+    await q(users.eve, "select join_group($1, 'Eve')", [c]);
+    await q(users.gus, "select join_group($1, 'Gus')", [c]);
+    await q(users.dev, "select add_area($1, 'Jayanagar')", [g]);
+    for (const u of [users.dev, users.eve, users.gus]) await save(u, g, 20000, await ratingsFor(u, g), true);
+    expect(await q(users.dev, "select group_revealed($1) as r", [g])).toEqual([{ r: false }]); // 3 of 4
+
+    await expect(q(users.eve, "select set_group_size($1, 3)", [g])).rejects.toThrow(/Only the person who created/);
+    await expect(q(users.dev, "select set_group_size($1, 2)", [g])).rejects.toThrow(/can't be less than 3/);
+    await q(users.dev, "select set_group_size($1, 3)", [g]);
+    expect(await q(users.dev, "select group_revealed($1) as r", [g])).toEqual([{ r: true }]);
+    await expect(q(users.dev, "select set_group_size($1, 4)", [g])).rejects.toThrow(/already revealed/);
   });
 });

@@ -314,3 +314,36 @@ describe("anchor radius", () => {
     expect(r.status).toBe("clear");
   });
 });
+
+describe("groups other than 3", () => {
+  it("a pair: combined budget is two shares and the rent splits in half", () => {
+    const pair = [{ id: "a", name: "Asha" }, { id: "b", name: "Bea" }];
+    const s = matchListings({
+      members: pair,
+      constraints: [constraints("a", { max_rent_share: 18000 }), constraints("b", { max_rent_share: 22000 })],
+      ratings: ratings.filter((r) => r.member_id !== "c"),
+      areas,
+      listings: [listing({ total_rent: 40000 }), listing({ total_rent: 40001 })],
+    });
+    expect(s.combinedBudget).toBe(40000);
+    expect(s.results.map((r) => r.status)).toEqual(["clear", "ruled_out"]);
+    expect(s.results[0].breakdown.map((b) => b.share)).toEqual([20000, 20000]);
+    expect(s.results[0].breakdown[0].compromises[0]).toMatch(/₹2,000 over their ₹18,000 max/);
+  });
+
+  it("four people: everyone's must-haves and areas apply, rent splits four ways", () => {
+    const four = [...members, { id: "d", name: "Dev" }];
+    const s = matchListings({
+      members: four,
+      constraints: [...members.map((m) => constraints(m.id)), constraints("d", { needs_pet_friendly: true })],
+      ratings: [...ratings, ...areas.map((a) => ({ member_id: "d", area_id: a.id, acceptable: a.id !== "hsr" }))],
+      areas,
+      listings: [listing({ total_rent: 80000 }), listing({ area_id: "hsr" }), listing({ pet_friendly: "no" })],
+    });
+    expect(s.combinedBudget).toBe(80000);
+    expect(s.results[0].breakdown).toHaveLength(4);
+    expect(s.results[0].breakdown[0].share).toBe(20000);
+    expect(s.results[1].ruledOutReasons).toContain("HSR Layout is not acceptable to Dev");
+    expect(s.results[2].ruledOutReasons).toContain("No pet-friendly, which Dev needs");
+  });
+});

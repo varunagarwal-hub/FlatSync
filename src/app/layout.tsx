@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "FlatSync",
-  description: "Three friends, one flat: shortlist listings against everyone's constraints.",
+  description: "Friends, one flat: shortlist listings against everyone's constraints.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

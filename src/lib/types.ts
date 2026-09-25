@@ -12,6 +12,9 @@ export interface Group {
   code: string;
   name: string;
   created_at: string;
+  /** How many people the group is for (2-6). Answers unlock when all of them have submitted. */
+  size: number;
+  created_by: string;
   /** null until computed (after the reveal) */
   overlap_localities: Locality[] | null;
 }

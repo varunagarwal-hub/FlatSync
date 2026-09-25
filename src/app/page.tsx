@@ -9,7 +9,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ j
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">FlatSync</h1>
         <p className="max-w-2xl text-stone-600">
-          For three friends looking for one flat. Each of you privately sets your budget, areas and must-haves. You add
+          For 2 to 6 friends looking for one flat. Each of you privately sets your budget, areas and must-haves. You add
           the listings you find yourselves, and the app rules out what doesn't work for someone. It then shows up to three
           options with what each of you gets and gives up.
         </p>
@@ -29,7 +29,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ j
       <ol className="grid gap-3 text-sm text-stone-600 sm:grid-cols-4">
         {[
           "One person creates the group and shares the code.",
-          "Each of you fills in your constraints. Nobody sees anyone else's until all 3 submit.",
+          "Each of you fills in your constraints. Nobody sees anyone else's until everyone submits.",
           "Anyone adds listings they've found: area, rent, floor, link.",
           "See the top 3 options with a per-person breakdown.",
         ].map((step, i) => (

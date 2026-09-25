@@ -1,17 +1,16 @@
-import { GROUP_SIZE } from "@/lib/constants";
 import type { MemberStatus } from "@/lib/types";
 
 /** Who has joined and submitted. Never shows anyone's answers. */
-export function SubmissionStatus({ members }: { members: MemberStatus[] }) {
+export function SubmissionStatus({ members, size }: { members: MemberStatus[]; size: number }) {
   const submitted = members.filter((m) => m.submitted).length;
-  const emptySlots = Math.max(0, GROUP_SIZE - members.length);
+  const emptySlots = Math.max(0, size - members.length);
 
   return (
     <div className="card">
       <div className="mb-3 flex items-baseline justify-between">
         <h2 className="font-semibold">Constraints</h2>
         <span className="text-sm text-stone-500">
-          {submitted} of {GROUP_SIZE} submitted
+          {submitted} of {size} submitted
         </span>
       </div>
       <ul className="space-y-2">

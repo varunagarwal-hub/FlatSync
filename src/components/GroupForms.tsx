@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { createGroup, joinGroup } from "@/app/actions/groups";
+import { DEFAULT_GROUP_SIZE, MAX_GROUP_SIZE, MIN_GROUP_SIZE } from "@/lib/constants";
 import { FormMessage, SubmitButton } from "./FormBits";
 
 export function CreateGroupForm() {
@@ -19,6 +20,19 @@ export function CreateGroupForm() {
           Your name
         </label>
         <input id="createName" name="displayName" className="input" maxLength={40} required />
+      </div>
+      <div>
+        <label className="label" htmlFor="size">
+          How many people, including you?
+        </label>
+        <select id="size" name="size" className="input" defaultValue={DEFAULT_GROUP_SIZE}>
+          {Array.from({ length: MAX_GROUP_SIZE - MIN_GROUP_SIZE + 1 }, (_, i) => MIN_GROUP_SIZE + i).map((n) => (
+            <option key={n} value={n}>
+              {n} people
+            </option>
+          ))}
+        </select>
+        <p className="hint mt-1">Answers unlock once this many people have joined and submitted. You can change it later.</p>
       </div>
       <FormMessage state={state} />
       <SubmitButton pendingText="Creating…">Create group</SubmitButton>

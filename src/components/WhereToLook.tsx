@@ -6,7 +6,7 @@ import type { Locality } from "@/lib/types";
 import { MapView, type MapCircle, type MapPin } from "./MapView";
 import { OverlapLocalities } from "./OverlapLocalities";
 
-const MEMBER_COLORS = ["#4f46e5", "#db2777", "#ea580c"];
+const MEMBER_COLORS = ["#4f46e5", "#db2777", "#ea580c", "#0891b2", "#65a30d", "#9333ea"];
 const STATUS_COLORS = { clear: "#0f766e", flagged: "#d97706", ruled_out: "#dc2626" } as const;
 
 /** Map of everyone's radius (only your own before the reveal) plus the overlap zone's localities. */
@@ -21,7 +21,7 @@ export function WhereToLook({ data }: { data: MemberGroupData }) {
     circles.push({
       ...circle,
       name: m.is_me ? `${m.display_name} (you)` : m.display_name,
-      color: MEMBER_COLORS[i % 3],
+      color: MEMBER_COLORS[i % MEMBER_COLORS.length],
     });
   });
   const myCircleMissing = !circles.some((c) => c.name.endsWith("(you)"));
@@ -56,7 +56,7 @@ export function WhereToLook({ data }: { data: MemberGroupData }) {
         <p className="text-sm text-stone-600">
           {revealed
             ? "Each circle is one person's radius around their anchor. The shaded teal zone is inside everyone's radius."
-            : "You see only your own radius for now. Everyone's circles and the shared zone appear once all 3 have submitted."}
+            : "You see only your own radius for now. Everyone's circles and the shared zone appear once everyone has submitted."}
         </p>
       </div>
 
@@ -96,7 +96,7 @@ export function WhereToLook({ data }: { data: MemberGroupData }) {
       )}
       {everyoneHasAnchor && !hasOverlap && (
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          The three circles don't all overlap, so no place is within everyone's radius. Every listing will be flagged
+          The circles don't all overlap, so no place is within everyone's radius. Every listing will be flagged
           for someone. Talk about who can stretch their distance.
         </p>
       )}

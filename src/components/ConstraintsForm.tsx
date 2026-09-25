@@ -142,7 +142,7 @@ export function ConstraintsForm({
       <div className="space-y-3">
         <FormMessage state={state} />
         <p className="text-sm text-stone-600">
-          Your answers stay private until all 3 of you submit. Once you submit, they're locked.
+          Your answers stay private until everyone in the group submits. Once you submit, they're locked.
           {missing.length > 0 && ` To submit, ${missing.join(" and ")}.`}
         </p>
         <div className="flex flex-wrap gap-2">
