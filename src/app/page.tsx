@@ -1,3 +1,4 @@
+import { BrandMark, Wordmark } from "@/components/BrandMark";
 import { CreateGroupForm, JoinGroupForm } from "@/components/GroupForms";
 
 const STEPS = [
@@ -15,9 +16,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ j
 
   return (
     <main className="space-y-10">
-      <header className="grid items-center gap-6 sm:grid-cols-[1fr_240px]">
+      <header className="grid items-center gap-6 sm:grid-cols-[1fr_260px]">
         <div className="space-y-4">
-          <p className="text-xs font-bold tracking-[0.12em] text-violet uppercase dark:text-link">FlatSync</p>
+          <p className="m-0">
+            <Wordmark />
+          </p>
           <h1 className="text-5xl leading-[0.95] font-extrabold sm:text-6xl">
             One flat that works for{" "}
             <span className="relative inline-block">
@@ -32,12 +35,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ j
             yours to make together.
           </p>
         </div>
-        <svg viewBox="0 0 240 220" className="mx-auto hidden w-full max-w-[240px] sm:block" aria-hidden="true">
-          <circle className="pop-in" style={{ transformBox: "fill-box", transformOrigin: "center" }} cx="88" cy="84" r="66" fill="#FF5A36" fillOpacity="0.9" stroke="#1B1740" strokeWidth="3" />
-          <circle className="pop-in pop-in-2" style={{ transformBox: "fill-box", transformOrigin: "center" }} cx="152" cy="84" r="66" fill="#6C4CF1" fillOpacity="0.9" stroke="#1B1740" strokeWidth="3" />
-          <circle className="pop-in pop-in-3" style={{ transformBox: "fill-box", transformOrigin: "center" }} cx="120" cy="138" r="66" fill="#19B38A" fillOpacity="0.9" stroke="#1B1740" strokeWidth="3" />
-          <circle cx="120" cy="102" r="20" fill="#FFC226" stroke="#1B1740" strokeWidth="3" />
-        </svg>
+        <BrandMark animate className="mx-auto hidden w-full max-w-[260px] sm:block" />
       </header>
 
       <div className="grid gap-6 sm:grid-cols-2">
